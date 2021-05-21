@@ -10,6 +10,7 @@ import (
 	"strconv"
 
 	"github.com/gorilla/mux"
+	"github.com/jackc/pgtype"
 	"github.com/jmoiron/sqlx"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -26,11 +27,11 @@ var schema = `
  `
 
 type employee_info struct {
-	ID           int64  `db:"id"`
-	Name         string `db:"name"`
-	Department   string `db:"department"`
-	Manager_Name string `db:"manager_name"`
-	Joining_Date string `db:"joining_date"`
+	ID           int64       `db:"id"`
+	Name         string      `db:"name"`
+	Department   string      `db:"department"`
+	Manager_Name string      `db:"manager_name"`
+	Joining_Date pgtype.Date `db:"joining_date"`
 }
 
 type response struct {
@@ -260,7 +261,7 @@ func updateEmployee(id int64, emp employee_info) int64 {
 	// if err != nil {
 	// 	log.Fatalf("Unable to execute the query. %v", err)
 	// }
-
+	fmt.Println(emp.Joining_Date)
 	tx := db.MustBegin()
 	if emp.Name != "" {
 		tx.MustExec(`UPDATE employee_info SET name=$2 WHERE id=$1`, id, emp.Name)
@@ -271,7 +272,7 @@ func updateEmployee(id int64, emp employee_info) int64 {
 	if emp.Manager_Name != "" {
 		tx.MustExec(`UPDATE employee_info SET manager_name=$2 WHERE id=$1`, id, emp.Manager_Name)
 	}
-	if emp.Joining_Date != "" {
+	if !emp.Joining_Date.Time.IsZero() {
 		tx.MustExec(`UPDATE employee_info SET joining_date=$2 WHERE id=$1`, id, emp.Joining_Date)
 	}
 	err := tx.Commit()
